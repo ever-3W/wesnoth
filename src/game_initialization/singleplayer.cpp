@@ -68,6 +68,9 @@ bool select_campaign(saved_game& state, jump_to_campaign_info jump_to_campaign)
 					case gui2::dialogs::campaign_selection::RNG_BIASED:
 						random_mode = "biased";
 						break;
+					case gui2::dialogs::campaign_selection::RNG_UNFAIR:
+						random_mode = "unfair";
+						break;
 				}
 				difficulty = dlg.get_difficulty();
 			} else {

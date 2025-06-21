@@ -40,6 +40,7 @@ public:
 		RNG_DEFAULT,
 		RNG_SAVE_SEED,
 		RNG_BIASED,
+		RNG_UNFAIR,
 	};
 
 	//return value for opening addon manager

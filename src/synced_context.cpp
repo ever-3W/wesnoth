@@ -232,7 +232,7 @@ void synced_context::send_user_choice()
 std::shared_ptr<randomness::rng> synced_context::get_rng_for_action()
 {
 	const std::string& mode = resources::classification->random_mode;
-	if(mode == "deterministic" || mode == "biased") {
+	if(mode == "deterministic" || mode == "biased" || mode == "unfair") {
 		auto get_rng = []() {
 			//rnd is nonundoable, even when the deterministic rng is used.
 			synced_context::block_undo(true, false);

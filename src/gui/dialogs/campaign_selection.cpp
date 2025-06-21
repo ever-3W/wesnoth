@@ -550,7 +550,7 @@ void campaign_selection::proceed()
 	}
 
 
-	rng_mode_ = RNG_MODE(std::clamp<unsigned>(find_widget<menu_button>("rng_menu").get_value(), RNG_DEFAULT, RNG_BIASED));
+	rng_mode_ = RNG_MODE(std::clamp<unsigned>(find_widget<menu_button>("rng_menu").get_value(), RNG_DEFAULT, RNG_UNFAIR));
 
 	prefs::get().set_modifications(engine_.active_mods(), false);
 }

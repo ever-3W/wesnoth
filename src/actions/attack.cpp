@@ -54,6 +54,8 @@
 
 #include "utils/optional_fwd.hpp"
 
+#define UNFAIR_BIAS_PERCENT 4
+
 static lg::log_domain log_engine("engine");
 #define DBG_NG LOG_STREAM(debug, log_engine)
 #define LOG_NG LOG_STREAM(info, log_engine)
@@ -773,6 +775,8 @@ private:
 
 	std::vector<bool> prng_attacker_;
 	std::vector<bool> prng_defender_;
+
+	bool use_urng_;
 };
 
 attack::unit_info::unit_info(const map_location& loc, int weapon, unit_map& units)
@@ -848,9 +852,14 @@ attack::attack(const map_location& attacker,
 	, use_prng_(resources::classification->random_mode == "biased" && randomness::generator->is_networked() == false)
 	, prng_attacker_()
 	, prng_defender_()
+
+	, use_urng_(resources::classification->random_mode == "unfair" && randomness::generator->is_networked() == false)
 {
 	if(use_prng_) {
 		LOG_NG << "Using experimental PRNG for combat";
+	}
+	if(use_urng_) {
+		LOG_NG << "Using unfair RNG for combat";
 	}
 }
 
@@ -1014,6 +1023,20 @@ bool attack::perform_hit(bool attacker_turn, statistics_attack_context& stats)
 		ran_num = randomness::generator->get_random_int(0, 99);
 	}
 	bool hits = (ran_num < attacker.cth_);
+	if(use_urng_) {
+		bool attacker_is_human = resources::gameboard->get_team(attacker.get_unit().side()).is_human();
+		bool defender_is_human = resources::gameboard->get_team(defender.get_unit().side()).is_human();
+
+		if (hits && attacker_is_human && !defender_is_human) {
+			// Negative bias: attacker will hit UNFAIR_BIAS_PERCENT less attacks than expected.
+			int bias_roll = randomness::generator->get_random_int(0, 99);
+			hits = bias_roll >= UNFAIR_BIAS_PERCENT;
+		} else if (!attacker_is_human && defender_is_human) {
+			// Positive bias: attacker will hit UNFAIR_BIAS_PERCENT more attacks than expected.
+			int bias_roll = 100 * ran_num + randomness::generator->get_random_int(0, 99);
+			hits = bias_roll < (100 + UNFAIR_BIAS_PERCENT) * attacker.cth_;
+		}
+	}
 
 	int damage = 0;
 	if(hits) {
